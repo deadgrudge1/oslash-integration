@@ -1,4 +1,4 @@
-package com.oslash.integration.plugin;
+package com.oslash.integration.plugin.subscriber.impl;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -12,26 +12,30 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.FileList;
 import com.oslash.integration.Main;
-import com.oslash.integration.plugin.metadata.MetaData;
-import com.oslash.integration.plugin.metadata.adapter.DriveMetaDataAdapter;
+import com.oslash.integration.plugin.reader.DataReader;
+import com.oslash.integration.plugin.reader.impl.GDriveDataReader;
+import com.oslash.integration.plugin.subscriber.Subscriber;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class GDrivePlugin implements Plugin<Drive> {
+public class GDriveSubscriber implements Subscriber<Drive> {
     private static final String APPLICATION_NAME = "Google Drive API Java Quickstart";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_METADATA_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "credentials.json";
 
+    private Drive drive;
+
     @Override
-    public Drive authorize() throws IOException, GeneralSecurityException {
+    public void authorize() throws GeneralSecurityException, IOException {
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
 
         // Load client secrets.
@@ -49,30 +53,23 @@ public class GDrivePlugin implements Plugin<Drive> {
                 .setAccessType("offline")
                 .build();
 
-        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8080).build();
-        Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8081).build();
+        Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("amitchaudhari228");
 
-        return new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+        drive = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME).build();
     }
 
     @Override
-    public List<MetaData> read() throws GeneralSecurityException, IOException {
-        FileList result = authorize().files().list()
-//                .setPageSize(10)
-                .setFields("nextPageToken, files(id, name, md5Checksum, kind)")
-                .execute();
+    public DataReader getDataReader() throws GeneralSecurityException, IOException {
+        // New Request for every instance of reader (assuming user is authorized once authenticated)
+        authorize();
 
-        return result
-                .getFiles()
-                .stream()
-                .map(re -> new DriveMetaDataAdapter(re).getMetaData())
-                .collect(Collectors.toList());
+        return new GDriveDataReader(drive);
     }
 
     @Override
-    public void listen() {
+    public void subscribe() {
 
     }
-
 }
