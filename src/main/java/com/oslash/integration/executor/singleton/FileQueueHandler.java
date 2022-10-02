@@ -6,7 +6,6 @@ import com.oslash.integration.executor.service.queue.GDriveFileProcessorQueue;
 import com.oslash.integration.executor.service.queue.Queue;
 import com.oslash.integration.executor.service.timer.AbstractTimer;
 import com.oslash.integration.executor.service.timer.TimedPublisher;
-import com.oslash.integration.executor.service.timer.QueueTimer;
 import com.oslash.integration.plugin.Plugin;
 import com.oslash.integration.plugin.exception.PluginException;
 import com.oslash.integration.plugin.service.listener.Listener;
@@ -20,9 +19,6 @@ public class FileQueueHandler {
 
     private FileQueueHandler() {
         driveQueue = new GDriveFileProcessorQueue(ExecutorConstant.BASE_DOWNLOAD_URL, ExecutorConstant.DEFAULT_BATCH_LIMIT);
-
-        AbstractTimer driveQueueTimer = new QueueTimer(driveQueue, 5);
-        driveQueueTimer.start();
     }
 
     public static FileQueueHandler getInstance() {
@@ -46,9 +42,6 @@ public class FileQueueHandler {
     public Queue<FileEvent> driveFileQueue() {
         if(driveQueue == null) {
             driveQueue = new GDriveFileProcessorQueue(ExecutorConstant.BASE_DOWNLOAD_URL, ExecutorConstant.DEFAULT_BATCH_LIMIT);
-
-            AbstractTimer driveQueueTimer = new QueueTimer(driveQueue, 5);
-            driveQueueTimer.start();
         }
 
         return driveQueue;
@@ -62,7 +55,7 @@ public class FileQueueHandler {
         try {
             Listener driveListener = plugin.getFileChangesListener(driveFileQueue());
 
-            driveListenerTimer = new TimedPublisher(driveListener, 5);
+            driveListenerTimer = new TimedPublisher(driveListener, ExecutorConstant.CHANGES_REFRESH_INTERVAL_SECONDS);
             driveListenerTimer.start();
         } catch (PluginException e) {
             e.printStackTrace();
