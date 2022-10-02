@@ -4,16 +4,12 @@ public class ExecutorConstant {
     // Maximum amount of events in a batch
     public static int DEFAULT_BATCH_LIMIT = 3;
 
-    // Fixed thread count limit while processing a batch
-    public static int DEFAULT_BATCH_EXECUTOR_LIMIT = 10;
+    // Fetch changes after every refresh interval
+    public static int CHANGES_REFRESH_INTERVAL_SECONDS = 60;
 
-    // Acts as a throttle
-    public static int DEFAULT_QUEUE_LIMIT = 3;
-
-    // Flush Queue if no incoming items and timeout occurs (Not implemented)
-    public static int FLUSH_TIME_OUT_SECONDS = 0;
-
+    // Base download url path
     public static String BASE_DOWNLOAD_URL = "/home/amit/opt";
 
+    // File Retry Count Policy
     public static final int FILE_RETRY_COUNT = 3;
 }
