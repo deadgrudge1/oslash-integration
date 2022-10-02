@@ -1,6 +1,6 @@
 package com.oslash.integration.plugin.factory;
 
-import com.oslash.integration.plugin.model.Plugin;
+import com.oslash.integration.plugin.Plugin;
 
 /**
  * Factory : Instantiate Plugin Configurations
